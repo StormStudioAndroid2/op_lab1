@@ -1,9 +1,7 @@
 #include<stdio.h> 
 #include<stdlib.h> 
-#include<unistd.h> 
 #include<sys/types.h> 
 #include<string.h> 
-#include<sys/wait.h> 
   
 char* delete_tabs(char* new_str,char* text) {
     int j = 0;
@@ -53,17 +51,15 @@ int main()
     // Parent process 
     else if (p > 0) 
     { 
-        scanf ("%[^\n]%*c", input_str);
-  
-        close(fd1[0]);  // Close reading end of first pipe 
-  
-        // Write input string and close writing end of first 
-        // pipe. 
-        write(fd1[1], input_str, strlen(input_str)+1); 
-        close(fd1[1]); 
-  
-        // Wait for child to send a string 
-        wait(NULL); 
+        int read_count = read(STDIN_FILENO, input_str, 100);
+        while (read_count == 100) {
+            write(fd1[1], input_str, 100);
+            read_count = read(STDIN_FILENO, input_str, 100);
+        }
+        if (read_count != 0) {
+            write(fd1[1], input_str, read_count);
+        }
+        wait(0);
   
         close(fd2[1]); // Close writing end of second pipe 
   
@@ -78,29 +74,38 @@ int main()
     // child process 
     else
     { 
-        close(fd1[1]);  // Close writing end of first pipe 
   
         // Read a string using first pipe 
         char get_str[100]; 
         read(fd1[0], get_str, 100); 
        char* new_str;
+        
+        // Concatenate a fixed string with it 
+        int read_count = read(fd1[0], get_str, 100);
         delete_tabs(new_str,get_str);
 
        for (int i = 0; i<strlen(new_str); ++i) {
            if (new_str[i]==' ') {
                new_str[i]='_';
            }
+       }       
+            while (read_count == 100) {
+            write(STDOUT_FILENO, new_str, strlen(new_str));
+
+            read_count = read(fd1[0], get_str, 100);
+            delete_tabs(new_str,get_str);
+
+       for (int i = 0; i<strlen(new_str); ++i) {
+           if (new_str[i]==' ') {
+               new_str[i]='_';
+           }
        }
-        // Concatenate a fixed string with it 
-       
-  
-        // Close both reading ends 
-        close(fd1[0]); 
-        close(fd2[0]); 
-        write(fd2[1], new_str, strlen(new_str)+1); 
-        close(fd2[1]); 
-  
-        exit(0); 
+        }
+        if (read_count != 0) {
+            write(STDOUT_FILENO, new_str, strlen(new_str));
+        }
+        exit(0);
+
     } 
     return 0;
 }
