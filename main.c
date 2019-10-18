@@ -7,7 +7,7 @@
   
 char* delete_tabs(char* new_str,char* text) {
     int j = 0;
-    for (int i = 0; i<strlen(text); ++i) {
+    for (int i = 0; i<=strlen(text); ++i) {
         if (text[i]=='\t') {
             for (int k = 0; k<3; ++k) {
                 new_str[j]=' ';
@@ -18,7 +18,6 @@ char* delete_tabs(char* new_str,char* text) {
             ++j;
         }
     }
-           printf("%s\n",new_str);
 
     return new_str;
 }
@@ -71,8 +70,9 @@ int main()
         // Read string from child, print it and close 
         // reading end. 
         read(fd2[0], result_str, 100); 
-        printf("%s\n",result_str); 
         close(fd2[0]); 
+        printf("%s\n",result_str); 
+
     } 
   
     // child process 
@@ -97,8 +97,6 @@ int main()
         // Close both reading ends 
         close(fd1[0]); 
         close(fd2[0]); 
-  
-        // Write concatenated string and close writing end 
         write(fd2[1], new_str, strlen(new_str)+1); 
         close(fd2[1]); 
   
